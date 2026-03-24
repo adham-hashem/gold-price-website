@@ -49,6 +49,17 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "/",
   },
+  icons: {
+    icon: [
+      { url: '/favicon_io/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon_io/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon_io/favicon.ico' },
+    ],
+    apple: [
+      { url: '/favicon_io/apple-touch-icon.png' },
+    ],
+  },
+  manifest: '/favicon_io/site.webmanifest',
   verification: {
     // Add your Google Search Console verification token here
     // google: "YOUR_VERIFICATION_TOKEN",
@@ -112,7 +123,6 @@ export default function RootLayout({
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#f8f9fb" />
-        <link rel="icon" href="/favicon.ico" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
