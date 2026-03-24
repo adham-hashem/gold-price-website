@@ -1,0 +1,30 @@
+{
+  "name": "gold-prices-app",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "db:push": "drizzle-kit push",
+    "db:seed": "npx tsx src/db/seed.ts",
+    "db:studio": "drizzle-kit studio"
+  },
+  "dependencies": {
+    "lucide-react": "^0.575.0",
+    "next": "16.1.6",
+    "next-themes": "^0.4.6",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "recharts": "^3.7.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.1.6",
+    "typescript": "^5"
+  }
+}
