@@ -91,6 +91,7 @@
 html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
+  overflow-x: hidden;
 }
 
 body {
@@ -361,8 +362,8 @@ img {
   top: -50px;
   left: 50%;
   transform: translateX(-50%);
-  width: 500px;
-  height: 500px;
+  width: min(500px, 100vw);
+  height: min(500px, 100vw);
   background: radial-gradient(circle, rgba(212, 165, 53, 0.06) 0%, transparent 70%);
   pointer-events: none;
 }
@@ -657,6 +658,87 @@ img {
   width: 100%;
   min-height: 100px;
   margin: 24px 0;
+}
+
+/* ===== Gold Guide & FAQ ===== */
+.gold-guide-section {
+  margin-bottom: 32px;
+}
+
+.guide-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  margin-top: 16px;
+}
+
+.guide-item h3 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-gold);
+  margin-bottom: 8px;
+}
+
+.guide-item p {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.8;
+}
+
+.faq-section {
+  margin-top: 32px;
+}
+
+.faq-item {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  margin-bottom: 8px;
+  overflow: hidden;
+  transition: border-color var(--transition-fast);
+}
+
+.faq-item[open] {
+  border-color: var(--border-gold);
+}
+
+.faq-item summary {
+  padding: 14px 18px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background var(--transition-fast);
+}
+
+.faq-item summary::-webkit-details-marker {
+  display: none;
+}
+
+.faq-item summary::before {
+  content: '◀';
+  font-size: 0.7rem;
+  color: var(--text-gold);
+  transition: transform var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.faq-item[open] summary::before {
+  transform: rotate(-90deg);
+}
+
+.faq-item summary:hover {
+  background: rgba(184, 134, 11, 0.04);
+}
+
+.faq-answer {
+  padding: 0 18px 16px;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.8;
 }
 
 .ad-slot-label {
@@ -1034,6 +1116,19 @@ img {
   .tool-header h1 {
     font-size: 1.4rem;
   }
+
+  .quick-info {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .guide-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-meta {
+    gap: 12px;
+    font-size: 0.8rem;
+  }
 }
 
 @media (max-width: 480px) {
@@ -1047,6 +1142,10 @@ img {
 
   .hero h1 {
     font-size: 1.35rem;
+  }
+
+  .hero-subtitle {
+    font-size: 0.85rem;
   }
 
   .logo {
@@ -1071,6 +1170,73 @@ img {
   .footer-bottom {
     flex-direction: column;
     text-align: center;
+  }
+
+  .quick-info {
+    grid-template-columns: 1fr;
+  }
+
+  .quick-info-item {
+    padding: 12px 14px;
+  }
+
+  .price-value {
+    font-size: 1.2rem;
+    word-break: break-word;
+  }
+
+  .section-title {
+    font-size: 1.15rem;
+  }
+
+  .ounce-price {
+    font-size: 1.1rem;
+  }
+
+  .hero-meta {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .result-card {
+    padding: 16px;
+  }
+
+  .result-total {
+    font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .container {
+    padding: 0 10px;
+  }
+
+  .hero h1 {
+    font-size: 1.2rem;
+  }
+
+  .price-value {
+    font-size: 1.1rem;
+  }
+
+  .card {
+    padding: 14px;
+  }
+
+  .karat-selector {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+
+  .karat-btn {
+    padding: 10px 6px;
+    font-size: 0.8rem;
+  }
+
+  .form-input {
+    padding: 12px 14px;
+    font-size: 0.9rem;
   }
 }
 
@@ -1128,7 +1294,7 @@ img {
 /* Quick info bar */
 .quick-info {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
   gap: 12px;
   margin-bottom: 32px;
 }
