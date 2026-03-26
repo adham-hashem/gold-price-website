@@ -51,17 +51,11 @@ let cachedPrices: GoldPrices | null = null;
 export async function fetchGoldPrices(): Promise<GoldPrices> {
     try {
         // Fetch from two sources and average them for higher accuracy
-        // Source 1: gold-api.com
-        const goldApiPromise = fetch('https://api.gold-api.com/price/XAU', { next: { revalidate: 60 } })
-            .then(res => res.ok ? res.json() : null)
-            .catch(() => null);
-
-        // Source 2: Binance (PAXG)
-        const binancePromise = fetch('https://api.binance.com/api/v3/ticker/price?symbol=PAXGUSDT', { next: { revalidate: 60 } })
-            .then(res => res.ok ? res.json() : null)
-            .catch(() => null);
-
-        const [goldApiData, binanceData] = await Promise.all([goldApiPromise, binancePromise]);
+        const [goldApiData, binanceData, settingsData] = await Promise.all([
+            fetch('https://api.gold-api.com/price/XAU', { next: { revalidate: 60 } }).then(res => res.ok ? res.json() : null).catch(() => null),
+            fetch('https://api.binance.com/api/v3/ticker/price?symbol=PAXGUSDT', { next: { revalidate: 60 } }).then(res => res.ok ? res.json() : null).catch(() => null),
+            fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/settings/all`, { cache: 'no-store' }).then(res => res.ok ? res.json() : []).catch(() => [])
+        ]);
 
         let ounceUSD = 0;
         const pricesToAverage = [];
@@ -74,21 +68,22 @@ export async function fetchGoldPrices(): Promise<GoldPrices> {
         } else {
             throw new Error('All gold price sources failed');
         }
-        
-        // Fetch dynamic Gold Dollar rate from backend
+
+        // Apply manual adjustments from settings
         let usdToEgp = Number(process.env.NEXT_PUBLIC_USD_EGP_RATE) || 50.5;
-        try {
-            const settingRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/settings/usd-egp-rate`, { cache: 'no-store' });
-            if (settingRes.ok) {
-                const settingData = await settingRes.json();
-                if (settingData.value) {
-                    usdToEgp = Number(settingData.value);
-                }
-            }
-        } catch (e) {
-            console.error('Failed to fetch dynamic USD/EGP rate:', e);
+        let ounceOffset = 0;
+
+        if (Array.isArray(settingsData)) {
+            const rateSetting = settingsData.find(s => s.key === 'usd-egp-rate');
+            const offsetSetting = settingsData.find(s => s.key === 'ounce-offset');
+            
+            if (rateSetting?.value) usdToEgp = Number(rateSetting.value);
+            if (offsetSetting?.value) ounceOffset = Number(offsetSetting.value);
         }
 
+        // Final Ounce Price with Manual Correction
+        ounceUSD += ounceOffset;
+        
         const goldOunceEGP = ounceUSD * usdToEgp;
         const pricePerGram24K = (goldOunceEGP / TROY_OUNCE_GRAMS) * EGYPT_MARKET_MARKUP;
 
@@ -106,9 +101,7 @@ export async function fetchGoldPrices(): Promise<GoldPrices> {
             changePercent24h: 0,
         };
 
-        // Log to backend for charts
-        logPriceToBackend(prices).catch(e => console.error('Failed to log price:', e));
-
+        logPriceToBackend(prices).catch(() => {});
         cachedPrices = prices;
         return prices;
     } catch (error) {
