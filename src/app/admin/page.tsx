@@ -150,65 +150,103 @@ export default function AdminPage() {
     }
 
     return (
-        <div className="container page-content" style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
-            <div className="tool-header">
-                <h1>⚙️ إعدادات <span className="gold-text">النظام</span></h1>
-                <button onClick={() => { localStorage.removeItem('adminToken'); setIsLoggedIn(false); }} style={{ background: 'none', border: 'none', color: 'var(--red-400)', cursor: 'pointer' }}>تسجيل الخروج</button>
+        <div className="container page-content" style={{ maxWidth: '1000px' }}>
+            {/* Header */}
+            <div className="tool-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
+                <div>
+                    <h1 style={{ fontSize: '2.4rem', fontWeight: 900 }}>
+                        🎛️ لوحة <span className="gold-text">التحكم</span>
+                    </h1>
+                    <p style={{ color: 'var(--text-secondary)' }}>إدارة أسعار السوق والمقالات الإخبارية</p>
+                </div>
+                <button 
+                    onClick={() => { localStorage.removeItem('adminToken'); setIsLoggedIn(false); }} 
+                    style={{ 
+                        padding: '10px 20px', 
+                        borderRadius: 'var(--radius-md)', 
+                        background: 'rgba(239, 68, 68, 0.1)', 
+                        color: 'var(--red-500)', 
+                        border: '1px solid rgba(239, 68, 68, 0.2)',
+                        cursor: 'pointer',
+                        fontWeight: 600,
+                        transition: 'all 0.2s'
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)'}
+                    onMouseOut={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'}
+                >
+                    تسجيل الخروج
+                </button>
             </div>
 
-            {/* Market Rates Section */}
-            <div className="card">
-                <h2 style={{ marginBottom: '20px', fontSize: '1.2rem' }}>💰 تحديث سعر صرف الذهب (دولار الصاغة)</h2>
-                <form onSubmit={handleUpdateRate} style={{ display: 'flex', alignItems: 'flex-end', gap: '20px', flexWrap: 'wrap' }}>
-                    <div style={{ flex: 1, minWidth: '200px' }}>
-                        <label style={{ display: 'block', marginBottom: '8px', fontWeight: 700 }}>سعر الدولار مقابل الجنيه (Sagha Dollar)</label>
+            {/* Dashboard Stats & Market Rate */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px', marginBottom: '40px' }}>
+                <div className="card" style={{ borderLeft: '5px solid var(--gold-500)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div>
+                            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>سعر دولار الصاغة الحالي</span>
+                            <div style={{ fontSize: '2.5rem', fontWeight: 900, color: 'var(--text-primary)', marginTop: '4px' }}>
+                                {goldDollarRate || '---'} <span style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>ج.م</span>
+                            </div>
+                        </div>
+                        <div style={{ width: '50px', height: '50px', background: 'var(--gold-50)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>
+                            💰
+                        </div>
+                    </div>
+                </div>
+
+                <div className="card">
+                    <h3 style={{ fontSize: '1.05rem', marginBottom: '16px' }}>🔄 تحديث سعر دولار الصاغة</h3>
+                    <form onSubmit={handleUpdateRate} style={{ display: 'flex', gap: '12px' }}>
                         <input 
                             type="number" 
                             step="0.01"
                             value={goldDollarRate}
                             onChange={(e) => setGoldDollarRate(e.target.value)}
                             className="input"
-                            style={{ width: '100%' }}
-                            placeholder="مثال: 55.0"
+                            style={{ flex: 1, padding: '12px' }}
+                            placeholder="السعر الجديد..."
                             required
                         />
-                    </div>
-                    <button type="submit" className="logo-icon" style={{ padding: '12px 24px', border: 'none', cursor: 'pointer' }} disabled={rateLoading}>
-                        {rateLoading ? 'جاري التحديث...' : 'حفظ السعر'}
-                    </button>
-                </form>
-                <p style={{ marginTop: '12px', fontSize: '0.85rem', color: 'var(--slate-400)' }}>
-                    * هذا السعر هو الذي يتم استخدامه لتحويل سعر الذهب العالمي (الأونصة) إلى الجنيه المصري.
-                </p>
+                        <button type="submit" className="logo-icon" style={{ padding: '0 24px', height: '48px', border: 'none', cursor: 'pointer', borderRadius: 'var(--radius-md)' }} disabled={rateLoading}>
+                            {rateLoading ? '...' : 'تحديث'}
+                        </button>
+                    </form>
+                    {success && <p style={{ color: 'var(--green-500)', fontSize: '0.85rem', marginTop: '8px' }}>{success}</p>}
+                </div>
             </div>
 
-            <div className="tool-header" style={{ marginTop: '20px' }}>
-                <h1>✍️ كتابة <span className="gold-text">مقال جديد</span></h1>
+            {/* Article Creation Section */}
+            <div className="tool-header" style={{ textAlign: 'right', marginBottom: '20px' }}>
+                <h2 style={{ fontSize: '1.6rem', fontWeight: 800 }}>
+                    ✍️ نشر <span className="gold-text">مقال جديد</span>
+                </h2>
             </div>
 
-            <div className="card">
-                <form onSubmit={handleCreateArticle} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+            <div className="card" style={{ padding: '32px' }}>
+                <form onSubmit={handleCreateArticle} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
                         <div>
                             <label style={{ display: 'block', marginBottom: '8px', fontWeight: 700 }}>عنوان المقال</label>
                             <input 
                                 type="text" 
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
-                                onBlur={() => setSlug(title.trim().replace(/\s+/g, '-').toLowerCase())}
+                                onBlur={() => !slug && setSlug(title.trim().replace(/\s+/g, '-').toLowerCase())}
                                 className="input"
-                                style={{ width: '100%' }}
+                                style={{ width: '100%', padding: '14px' }}
+                                placeholder="أدخل عنواناً جذاباً لمقالك..."
                                 required
                             />
                         </div>
                         <div>
-                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 700 }}>الرابط (Slug)</label>
+                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 700 }}>رابط المقال (Slug)</label>
                             <input 
                                 type="text" 
                                 value={slug}
                                 onChange={(e) => setSlug(e.target.value)}
                                 className="input"
-                                style={{ width: '100%' }}
+                                style={{ width: '100%', padding: '14px' }}
+                                placeholder="example-article-link"
                                 required
                             />
                         </div>
@@ -222,8 +260,8 @@ export default function AdminPage() {
                                 value={metaDescription}
                                 onChange={(e) => setMetaDescription(e.target.value)}
                                 className="input"
-                                style={{ width: '100%' }}
-                                placeholder="اختياري - وصف مختصر للمقال يظهر في جوجل"
+                                style={{ width: '100%', padding: '14px' }}
+                                placeholder="اكتب وصفاً مختصراً يظهر في نتائج بحث جوجل..."
                             />
                         </div>
                         <div>
@@ -232,11 +270,11 @@ export default function AdminPage() {
                                 value={category}
                                 onChange={(e) => setCategory(e.target.value)}
                                 className="input"
-                                style={{ width: '100%' }}
+                                style={{ width: '100%', padding: '14px' }}
                             >
-                                <option value="أخبار">أخبار</option>
-                                <option value="تحليلات">تحليلات</option>
-                                <option value="نصائح">نصائح</option>
+                                <option value="أخبار">أخبار الذهب اليوم</option>
+                                <option value="تحليلات">تحليلات السوق</option>
+                                <option value="نصائح">نصائح الشراء والادخار</option>
                             </select>
                         </div>
                     </div>
@@ -247,17 +285,42 @@ export default function AdminPage() {
                             value={content}
                             onChange={(e) => setContent(e.target.value)}
                             className="input"
-                            style={{ width: '100%', minHeight: '300px', lineHeight: '1.6' }}
+                            style={{ 
+                                width: '100%', 
+                                minHeight: '400px', 
+                                padding: '20px', 
+                                lineHeight: '1.8', 
+                                fontSize: '1rem',
+                                border: '1px solid var(--border-subtle)',
+                                borderRadius: 'var(--radius-md)',
+                                outline: 'none'
+                            }}
+                            placeholder="ابدأ بكتابة محتوى المقال هنا... يمكنك استخدام وسوم HTML مثل <h2> و <p> و <ul>"
                             required
                         />
                     </div>
 
-                    {error && <p style={{ color: 'var(--red-400)' }}>{error}</p>}
-                    {success && <p style={{ color: 'var(--green-400)' }}>{success}</p>}
-
-                    <button type="submit" className="logo-icon" style={{ width: '200px', border: 'none', cursor: 'pointer' }} disabled={loading}>
-                        {loading ? 'جاري النشر...' : 'نشر المقال الآن'}
-                    </button>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '20px', borderTop: '1px solid var(--border-subtle)', paddingTop: '24px' }}>
+                        {error && <p style={{ color: 'var(--red-400)', fontWeight: 600 }}>{error}</p>}
+                        {success && <p style={{ color: 'var(--green-500)', fontWeight: 600 }}>{success}</p>}
+                        <button 
+                            type="submit" 
+                            className="logo-icon" 
+                            style={{ 
+                                width: '240px', 
+                                height: '56px', 
+                                border: 'none', 
+                                cursor: 'pointer', 
+                                borderRadius: 'var(--radius-lg)',
+                                fontSize: '1.1rem',
+                                fontWeight: 700,
+                                boxShadow: '0 10px 20px rgba(184, 134, 11, 0.2)'
+                            }} 
+                            disabled={loading}
+                        >
+                            {loading ? 'جاري النشر...' : 'نشر المقال الآن 🚀'}
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>
