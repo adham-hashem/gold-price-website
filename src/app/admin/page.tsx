@@ -151,13 +151,13 @@ export default function AdminPage() {
                 <div className="card" style={{ borderLeft: '5px solid var(--gold-500)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <div>
-                            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>سعر دولار الصاغة (EGP)</span>
+                            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>السعر الأساسي للدولار (البنك)</span>
                             <div style={{ fontSize: '2.5rem', fontWeight: 900, color: 'var(--text-primary)', marginTop: '4px' }}>
-                                {goldDollarRate || '---'}
+                                {goldDollarRate || '---'} <span style={{ fontSize: '1rem' }}>ج.م</span>
                             </div>
                         </div>
                         <div style={{ width: '50px', height: '50px', background: 'var(--gold-50)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>
-                            🇪🇬
+                            🏦
                         </div>
                     </div>
                 </div>
@@ -165,9 +165,9 @@ export default function AdminPage() {
                 <div className="card" style={{ borderLeft: '5px solid var(--gold-500)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <div>
-                            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>تصحيح السعر العالمي (USD)</span>
+                            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>فجوة الصاغة (علاوة السوق)</span>
                             <div style={{ fontSize: '2.5rem', fontWeight: 900, color: 'var(--text-primary)', marginTop: '4px' }}>
-                                {goldOunceOffset || '0'} <span style={{ fontSize: '1rem' }}>$</span>
+                                {goldOunceOffset || '0'} <span style={{ fontSize: '1rem' }}>ج.م</span>
                             </div>
                         </div>
                         <div style={{ width: '50px', height: '50px', background: 'var(--gold-50)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>
@@ -179,7 +179,7 @@ export default function AdminPage() {
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px', marginBottom: '40px' }}>
                 <div className="card">
-                    <h3 style={{ fontSize: '1.05rem', marginBottom: '16px' }}>🔄 تحديث سعر دولار الصاغة</h3>
+                    <h3 style={{ fontSize: '1.05rem', marginBottom: '16px' }}>🏦 تحديث السعر الأساسي للدولار</h3>
                     <form onSubmit={handleUpdateRate} style={{ display: 'flex', gap: '12px' }}>
                         <input 
                             type="number" 
@@ -188,7 +188,7 @@ export default function AdminPage() {
                             onChange={(e) => setGoldDollarRate(e.target.value)}
                             className="input"
                             style={{ flex: 1, padding: '12px' }}
-                            placeholder="55.0..."
+                            placeholder="50.70..."
                             required
                         />
                         <button type="submit" className="logo-icon" style={{ padding: '0 24px', height: '48px', border: 'none', cursor: 'pointer', borderRadius: 'var(--radius-md)' }} disabled={rateLoading}>
@@ -198,7 +198,7 @@ export default function AdminPage() {
                 </div>
 
                 <div className="card">
-                    <h3 style={{ fontSize: '1.05rem', marginBottom: '16px' }}>⚙️ تصحيح السعر العالمي ($)</h3>
+                    <h3 style={{ fontSize: '1.05rem', marginBottom: '16px' }}>⚖️ تحديث فجوة / علاوة الصاغة</h3>
                     <form onSubmit={handleUpdateOffset} style={{ display: 'flex', gap: '12px' }}>
                         <input 
                             type="number" 
@@ -207,7 +207,7 @@ export default function AdminPage() {
                             onChange={(e) => setGoldOunceOffset(e.target.value)}
                             className="input"
                             style={{ flex: 1, padding: '12px' }}
-                            placeholder="+10.0 أو -5.0..."
+                            placeholder="+2.5 أو +5.0..."
                             required
                         />
                         <button type="submit" className="logo-icon" style={{ padding: '0 24px', height: '48px', border: 'none', cursor: 'pointer', borderRadius: 'var(--radius-md)' }} disabled={rateLoading}>
@@ -215,6 +215,14 @@ export default function AdminPage() {
                         </button>
                     </form>
                 </div>
+            </div>
+            <div style={{ textAlign: 'center', marginBottom: '40px', padding: '15px', background: 'var(--gold-50)', borderRadius: 'var(--radius-md)', border: '1px dashed var(--gold-200)' }}>
+                <p style={{ fontWeight: 700, color: 'var(--gold-800)' }}>
+                    💵 دولار الصاغة الفعلي: <span style={{ fontSize: '1.4rem' }}>{(parseFloat(goldDollarRate) || 0) + (parseFloat(goldOunceOffset) || 0)}</span> ج.م
+                </p>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                    (السعر الأساسي + الفجوة)
+                </p>
             </div>
             {success && <div className="card" style={{ marginBottom: '40px', background: 'rgba(34, 197, 94, 0.1)', color: 'var(--green-500)', textAlign: 'center', border: '1px solid rgba(34, 197, 94, 0.2)' }}>{success}</div>}
             {error && <div className="card" style={{ marginBottom: '40px', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--red-500)', textAlign: 'center', border: '1px solid rgba(239, 68, 68, 0.2)' }}>{error}</div>}

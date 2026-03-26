@@ -70,21 +70,21 @@ export async function fetchGoldPrices(): Promise<GoldPrices> {
         }
 
         // Apply manual adjustments from settings
-        let usdToEgp = Number(process.env.NEXT_PUBLIC_USD_EGP_RATE) || 50.5;
-        let ounceOffset = 0;
+        let baseRate = Number(process.env.NEXT_PUBLIC_USD_EGP_RATE) || 50.5;
+        let rateOffset = 0;
 
         if (Array.isArray(settingsData)) {
             const rateSetting = settingsData.find(s => s.key === 'usd-egp-rate');
-            const offsetSetting = settingsData.find(s => s.key === 'ounce-offset');
+            const offsetSetting = settingsData.find(s => s.key === 'ounce-offset'); // Repurposing this key as rate-offset
             
-            if (rateSetting?.value) usdToEgp = Number(rateSetting.value);
-            if (offsetSetting?.value) ounceOffset = Number(offsetSetting.value);
+            if (rateSetting?.value) baseRate = Number(rateSetting.value);
+            if (offsetSetting?.value) rateOffset = Number(offsetSetting.value);
         }
 
-        // Final Ounce Price with Manual Correction
-        ounceUSD += ounceOffset;
+        // Final Gold Dollar Rate with Premium (e.g., 52.5 + 2.0 = 54.5)
+        const effectiveUsdToEgp = baseRate + rateOffset;
         
-        const goldOunceEGP = ounceUSD * usdToEgp;
+        const goldOunceEGP = ounceUSD * effectiveUsdToEgp;
         const pricePerGram24K = (goldOunceEGP / TROY_OUNCE_GRAMS) * EGYPT_MARKET_MARKUP;
 
         const prices: GoldPrices = {
@@ -95,7 +95,7 @@ export async function fetchGoldPrices(): Promise<GoldPrices> {
             karat14: Math.round(pricePerGram24K * KARAT_PURITY[14]),
             ounceUSD: Math.round(ounceUSD * 100) / 100,
             ounceEGP: Math.round(goldOunceEGP),
-            usdToEgp: Math.round(usdToEgp * 100) / 100,
+            usdToEgp: Math.round(effectiveUsdToEgp * 100) / 100,
             lastUpdated: new Date(),
             change24h: 0,
             changePercent24h: 0,
