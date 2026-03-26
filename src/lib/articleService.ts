@@ -14,7 +14,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 export async function fetchArticles(): Promise<Article[]> {
     try {
         const response = await fetch(`${API_URL}/api/articles`, {
-            next: { revalidate: 3600 } // Cache for 1 hour
+            cache: 'no-store' // Disable cache for debugging
         });
         if (!response.ok) return [];
         return response.json();
@@ -27,7 +27,7 @@ export async function fetchArticles(): Promise<Article[]> {
 export async function fetchArticleBySlug(slug: string): Promise<Article | null> {
     try {
         const response = await fetch(`${API_URL}/api/articles/${slug}`, {
-            next: { revalidate: 3600 }
+            cache: 'no-store'
         });
         if (!response.ok) return null;
         return response.json();
