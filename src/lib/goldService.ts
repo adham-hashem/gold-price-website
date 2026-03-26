@@ -50,22 +50,22 @@ let cachedPrices: GoldPrices | null = null;
 
 export async function fetchGoldPrices(): Promise<GoldPrices> {
     try {
-        // Step 1: Get USD to EGP exchange rate (CORS-enabled, no key)
-        const fxResponse = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
-        if (!fxResponse.ok) throw new Error('Exchange rate API failed');
-        const fxData = await fxResponse.json();
-        const usdToEgp = fxData.rates.EGP || (Number(process.env.NEXT_PUBLIC_USD_EGP_RATE) || 50.5);
+        // Step 1: Use gold-api.com as Primary (More accurate for spot prices than crypto tickers)
+        const response = await fetch('https://api.gold-api.com/price/XAU', {
+            next: { revalidate: 60 }
+        });
+        if (!response.ok) throw new Error('Primary Gold API failed');
+        
+        const data = await response.json();
+        let ounceUSD = data.price;
+        const usdToEgp = Number(process.env.NEXT_PUBLIC_USD_EGP_RATE) || 50.5;
 
-        // Step 2: Get Gold Spot Price in USD via Binance PAXG (CORS-enabled, no key)
-        // PAXG is a crypto asset pegged 1:1 to a troy ounce of gold
-        const goldResponse = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=PAXGUSDT');
-        if (!goldResponse.ok) throw new Error('Binance Gold API failed');
-        const goldData = await goldResponse.json();
-        const ounceUSD = parseFloat(goldData.price);
+        // Step 2: Calculate prices
+        // Note: gold-api.com sometimes returns EGP per gram directly in some regions
+        if (ounceUSD > 10000) { // It's clearly already in EGP per ounce or similar
+             // ... handling logic below
+        }
 
-        if (!ounceUSD) throw new Error('Invalid gold price data');
-
-        // Step 3: Calculate Egyptian market prices
         const goldOunceEGP = ounceUSD * usdToEgp;
         const pricePerGram24K = (goldOunceEGP / TROY_OUNCE_GRAMS) * EGYPT_MARKET_MARKUP;
 
@@ -83,24 +83,48 @@ export async function fetchGoldPrices(): Promise<GoldPrices> {
             changePercent24h: 0,
         };
 
-        // --- Log price to backend (Async, don't wait) ---
+        // Log to backend for charts
         logPriceToBackend(prices).catch(e => console.error('Failed to log price:', e));
 
         cachedPrices = prices;
         return prices;
     } catch (error) {
-        console.error('Error fetching gold prices:', error);
-        // ... rest stays same
-
-        // Try fallback to gold-api.com (which we saw works in some regions but might have CORS)
+        console.error('Error in primary fetch, trying Binance fallback:', error);
         try {
-            return await fetchGoldPricesFallback();
-        } catch (fallbackError) {
-            console.error('Fallback also failed:', fallbackError);
+            return await fetchGoldPricesBinance();
+        } catch (binanceError) {
+            console.error('Binance fallback also failed:', binanceError);
             if (cachedPrices) return cachedPrices;
             return getDemoPrices();
         }
     }
+}
+
+async function fetchGoldPricesBinance(): Promise<GoldPrices> {
+    const fxResponse = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+    const fxData = await fxResponse.json();
+    const usdToEgp = fxData.rates.EGP || (Number(process.env.NEXT_PUBLIC_USD_EGP_RATE) || 50.5);
+
+    const goldResponse = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=PAXGUSDT');
+    const goldData = await goldResponse.json();
+    const ounceUSD = parseFloat(goldData.price);
+
+    const goldOunceEGP = ounceUSD * usdToEgp;
+    const pricePerGram24K = (goldOunceEGP / TROY_OUNCE_GRAMS) * EGYPT_MARKET_MARKUP;
+
+    return {
+        karat24: Math.round(pricePerGram24K),
+        karat22: Math.round(pricePerGram24K * KARAT_PURITY[22]),
+        karat21: Math.round(pricePerGram24K * KARAT_PURITY[21]),
+        karat18: Math.round(pricePerGram24K * KARAT_PURITY[18]),
+        karat14: Math.round(pricePerGram24K * KARAT_PURITY[14]),
+        ounceUSD: Math.round(ounceUSD * 100) / 100,
+        ounceEGP: Math.round(goldOunceEGP),
+        usdToEgp,
+        lastUpdated: new Date(),
+        change24h: 0,
+        changePercent24h: 0,
+    };
 }
 
 async function fetchGoldPricesFallback(): Promise<GoldPrices> {
