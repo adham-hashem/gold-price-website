@@ -18,6 +18,10 @@ export default function AdminPage() {
     const [metaDescription, setMetaDescription] = useState('');
     const [category, setCategory] = useState('أخبار');
     const [success, setSuccess] = useState('');
+    
+    // Gold Dollar State
+    const [goldDollarRate, setGoldDollarRate] = useState('');
+    const [rateLoading, setRateLoading] = useState(false);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -34,6 +38,7 @@ export default function AdminPage() {
                 setToken(data.token);
                 setIsLoggedIn(true);
                 localStorage.setItem('adminToken', data.token);
+                fetchCurrentRate();
             } else {
                 setError(data.error);
             }
@@ -41,6 +46,40 @@ export default function AdminPage() {
             setError('خطأ في الاتصال بالسيرفر');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchCurrentRate = async () => {
+        try {
+            const res = await fetch(`${API_URL}/api/settings/usd-egp-rate`);
+            const data = await res.json();
+            if (data.value) setGoldDollarRate(data.value);
+        } catch (e) {}
+    };
+
+    const handleUpdateRate = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setRateLoading(true);
+        setSuccess('');
+        setError('');
+        try {
+            const res = await fetch(`${API_URL}/api/admin/settings`, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ key: 'usd-egp-rate', value: goldDollarRate })
+            });
+            if (res.ok) {
+                setSuccess('تم تحديث سعر دولار الصاغة بنجاح!');
+            } else {
+                setError('فشل في تحديث السعر');
+            }
+        } catch (err) {
+            setError('حدث خطأ في الاتصال');
+        } finally {
+            setRateLoading(false);
         }
     };
 
@@ -79,6 +118,7 @@ export default function AdminPage() {
         if (savedToken) {
             setToken(savedToken);
             setIsLoggedIn(true);
+            fetchCurrentRate();
         }
     }, []);
 
@@ -110,10 +150,40 @@ export default function AdminPage() {
     }
 
     return (
-        <div className="container page-content">
+        <div className="container page-content" style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
             <div className="tool-header">
-                <h1>✍️ كتابة <span className="gold-text">مقال جديد</span></h1>
+                <h1>⚙️ إعدادات <span className="gold-text">النظام</span></h1>
                 <button onClick={() => { localStorage.removeItem('adminToken'); setIsLoggedIn(false); }} style={{ background: 'none', border: 'none', color: 'var(--red-400)', cursor: 'pointer' }}>تسجيل الخروج</button>
+            </div>
+
+            {/* Market Rates Section */}
+            <div className="card">
+                <h2 style={{ marginBottom: '20px', fontSize: '1.2rem' }}>💰 تحديث سعر صرف الذهب (دولار الصاغة)</h2>
+                <form onSubmit={handleUpdateRate} style={{ display: 'flex', alignItems: 'flex-end', gap: '20px', flexWrap: 'wrap' }}>
+                    <div style={{ flex: 1, minWidth: '200px' }}>
+                        <label style={{ display: 'block', marginBottom: '8px', fontWeight: 700 }}>سعر الدولار مقابل الجنيه (Sagha Dollar)</label>
+                        <input 
+                            type="number" 
+                            step="0.01"
+                            value={goldDollarRate}
+                            onChange={(e) => setGoldDollarRate(e.target.value)}
+                            className="input"
+                            style={{ width: '100%' }}
+                            placeholder="مثال: 55.0"
+                            required
+                        />
+                    </div>
+                    <button type="submit" className="logo-icon" style={{ padding: '12px 24px', border: 'none', cursor: 'pointer' }} disabled={rateLoading}>
+                        {rateLoading ? 'جاري التحديث...' : 'حفظ السعر'}
+                    </button>
+                </form>
+                <p style={{ marginTop: '12px', fontSize: '0.85rem', color: 'var(--slate-400)' }}>
+                    * هذا السعر هو الذي يتم استخدامه لتحويل سعر الذهب العالمي (الأونصة) إلى الجنيه المصري.
+                </p>
+            </div>
+
+            <div className="tool-header" style={{ marginTop: '20px' }}>
+                <h1>✍️ كتابة <span className="gold-text">مقال جديد</span></h1>
             </div>
 
             <div className="card">

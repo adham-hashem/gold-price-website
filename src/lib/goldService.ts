@@ -58,7 +58,20 @@ export async function fetchGoldPrices(): Promise<GoldPrices> {
         
         const data = await response.json();
         let ounceUSD = data.price;
-        const usdToEgp = Number(process.env.NEXT_PUBLIC_USD_EGP_RATE) || 50.5;
+        
+        // Fetch dynamic Gold Dollar rate from backend
+        let usdToEgp = Number(process.env.NEXT_PUBLIC_USD_EGP_RATE) || 50.5;
+        try {
+            const settingRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/settings/usd-egp-rate`);
+            if (settingRes.ok) {
+                const settingData = await settingRes.json();
+                if (settingData.value) {
+                    usdToEgp = Number(settingData.value);
+                }
+            }
+        } catch (e) {
+            console.error('Failed to fetch dynamic USD/EGP rate, using default:', e);
+        }
 
         // Step 2: Calculate prices
         // Note: gold-api.com sometimes returns EGP per gram directly in some regions
@@ -101,9 +114,22 @@ export async function fetchGoldPrices(): Promise<GoldPrices> {
 }
 
 async function fetchGoldPricesBinance(): Promise<GoldPrices> {
-    const fxResponse = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
-    const fxData = await fxResponse.json();
-    const usdToEgp = fxData.rates.EGP || (Number(process.env.NEXT_PUBLIC_USD_EGP_RATE) || 50.5);
+    // Fetch dynamic Gold Dollar rate from backend
+    let usdToEgp = Number(process.env.NEXT_PUBLIC_USD_EGP_RATE) || 50.5;
+    try {
+        const settingRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/settings/usd-egp-rate`);
+        if (settingRes.ok) {
+            const settingData = await settingRes.json();
+            if (settingData.value) {
+                usdToEgp = Number(settingData.value);
+            }
+        }
+    } catch (e) {
+        // Fallback to official exchange rate API if backend setting fails
+        const fxResponse = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+        const fxData = await fxResponse.json();
+        usdToEgp = fxData.rates.EGP || usdToEgp;
+    }
 
     const goldResponse = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=PAXGUSDT');
     const goldData = await goldResponse.json();
@@ -135,9 +161,17 @@ async function fetchGoldPricesFallback(): Promise<GoldPrices> {
     const data = await response.json();
     let ounceUSD = data.price;
 
-    // If the price looks like EGP (over 1000), it's already converted
-    // In our tests, gold-api.com returned 4492 which is EGP/gram
+    // Fetch dynamic Gold Dollar rate from backend
     let usdToEgp = Number(process.env.NEXT_PUBLIC_USD_EGP_RATE) || 50.5;
+    try {
+        const settingRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/settings/usd-egp-rate`);
+        if (settingRes.ok) {
+            const settingData = await settingRes.json();
+            if (settingData.value) {
+                usdToEgp = Number(settingData.value);
+            }
+        }
+    } catch (e) {}
 
     if (ounceUSD > 1000) {
         // Assume it's EGP per gram if name is Gold or symbol is XAU
