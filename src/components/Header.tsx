@@ -10,6 +10,7 @@ export default function Header() {
 
     const links = [
         { href: '/', label: 'أسعار اليوم', icon: '📊' },
+        { href: '/articles/', label: 'أخبار الذهب', icon: '📰' },
         { href: '/calculator/', label: 'حاسبة الذهب', icon: '🧮' },
         { href: '/converter/', label: 'تحويل العيارات', icon: '🔄' },
     ];

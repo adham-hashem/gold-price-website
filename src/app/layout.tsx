@@ -4,8 +4,26 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Cairo, Tajawal } from "next/font/google";
+
+const cairo = Cairo({
+  subsets: ["arabic"],
+  weight: ["300", "400", "500", "600", "700", "800", "900"],
+  display: "swap",
+  variable: "--font-cairo",
+});
+
+const tajawal = Tajawal({
+  subsets: ["arabic"],
+  weight: ["300", "400", "500", "700", "800", "900"],
+  display: "swap",
+  variable: "--font-tajawal",
+});
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.egyptgold.online";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: "أسعار الذهب اليوم في مصر | تحديث لحظي لسعر جرام الذهب عيار 21، 18، 24",
   description: "تابع أسعار الذهب اليوم في مصر لحظة بلحظة. تغطية شاملة لسعر جرام الذهب عيار 21، عيار 18، وعيار 24 في محلات الصاغة المصرية. حاسبة دقيقة للمصنعية وتحويل العيارات وأسعار الأونصة عالمياً.",
   keywords: [
@@ -26,14 +44,24 @@ export const metadata: Metadata = {
   openGraph: {
     title: "أسعار الذهب اليوم في مصر - محدثة لحظة بلحظة",
     description: "تابع أسعار الذهب اليوم في مصر لحظة بلحظة. جميع العيارات 24 و 22 و 21 و 18. حاسبة المصنعية وتحويل العيارات.",
+    url: SITE_URL,
     type: "website",
     locale: "ar_EG",
     siteName: "أسعار الذهب مصر",
+    images: [
+      {
+        url: "/favicon_io/android-chrome-512x512.png",
+        width: 512,
+        height: 512,
+        alt: "أسعار الذهب في مصر",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "أسعار الذهب اليوم في مصر",
     description: "تابع أسعار الذهب اليوم في مصر لحظة بلحظة. سعر جرام الذهب لجميع العيارات.",
+    images: ["/favicon_io/android-chrome-512x512.png"],
   },
   robots: {
     index: true,
@@ -77,13 +105,27 @@ export default function RootLayout({
       "@type": "WebSite",
       "name": "أسعار الذهب مصر",
       "description": "أسعار الذهب اليوم في مصر لحظة بلحظة",
-      "url": "https://your-domain.com",
+      "url": SITE_URL,
       "inLanguage": "ar",
       "potentialAction": {
         "@type": "SearchAction",
-        "target": "https://your-domain.com/?q={search_term_string}",
+        "target": `${SITE_URL}/?q={search_term_string}`,
         "query-input": "required name=search_term_string",
       },
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "أسعار الذهب مصر",
+      "url": SITE_URL,
+      "logo": `${SITE_URL}/favicon_io/android-chrome-512x512.png`,
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "telephone": "",
+        "contactType": "customer service",
+        "areaServed": "EG",
+        "availableLanguage": "Arabic"
+      }
     },
     {
       "@context": "https://schema.org",
@@ -117,8 +159,10 @@ export default function RootLayout({
     }
   ];
 
+  const adsenseId = process.env.NEXT_PUBLIC_ADSENSE_PUB_ID || "ca-pub-3207777897976930";
+
   return (
-    <html lang="ar" dir="rtl">
+    <html lang="ar" dir="rtl" className={`${cairo.variable} ${tajawal.variable}`}>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -127,7 +171,7 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3207777897976930"
+        <script async src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseId}`}
           crossOrigin="anonymous"></script>
       </head>
       <body>

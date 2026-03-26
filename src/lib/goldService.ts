@@ -79,14 +79,18 @@ export async function fetchGoldPrices(): Promise<GoldPrices> {
             ounceEGP: Math.round(goldOunceEGP),
             usdToEgp: Math.round(usdToEgp * 100) / 100,
             lastUpdated: new Date(),
-            change24h: 0, // Binance ticker doesn't provide 24h change in this simple endpoint
+            change24h: 0,
             changePercent24h: 0,
         };
+
+        // --- Log price to backend (Async, don't wait) ---
+        logPriceToBackend(prices).catch(e => console.error('Failed to log price:', e));
 
         cachedPrices = prices;
         return prices;
     } catch (error) {
         console.error('Error fetching gold prices:', error);
+        // ... rest stays same
 
         // Try fallback to gold-api.com (which we saw works in some regions but might have CORS)
         try {
@@ -225,4 +229,40 @@ export function formatDate(date: Date): string {
         month: 'long',
         day: 'numeric',
     });
+}
+async function logPriceToBackend(prices: GoldPrices) {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+    const SECRET = process.env.CRON_SECRET; 
+    
+    if (!SECRET) return; // Don't log if secret not set
+
+    try {
+        await fetch(`${API_URL}/api/admin/log-price`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                karat24: prices.karat24,
+                karat21: prices.karat21,
+                karat18: prices.karat18,
+                ounceUSD: prices.ounceUSD,
+                secret: SECRET
+            })
+        });
+    } catch (e) {
+        // Silently fail as this is a background task
+    }
+}
+
+export async function fetchPriceHistory() {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+    try {
+        const response = await fetch(`${API_URL}/api/price-history`, {
+            next: { revalidate: 3600 }
+        });
+        if (!response.ok) return [];
+        return response.json();
+    } catch (error) {
+        console.error('Error fetching price history:', error);
+        return [];
+    }
 }

@@ -22,8 +22,11 @@ export default function Footer() {
                         <h3>روابط سريعة</h3>
                         <ul>
                             <li><Link href="/">أسعار الذهب اليوم</Link></li>
+                            <li><Link href="/articles/">أخبار الذهب</Link></li>
                             <li><Link href="/calculator/">حاسبة الذهب</Link></li>
                             <li><Link href="/converter/">تحويل العيارات</Link></li>
+                            <li><Link href="/about/">من نحن</Link></li>
+                            <li><Link href="/privacy-policy/">سياسة الخصوصية</Link></li>
                         </ul>
                     </div>
 
