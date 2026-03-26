@@ -50,19 +50,35 @@ let cachedPrices: GoldPrices | null = null;
 
 export async function fetchGoldPrices(): Promise<GoldPrices> {
     try {
-        // Step 1: Use gold-api.com as Primary (More accurate for spot prices than crypto tickers)
-        const response = await fetch('https://api.gold-api.com/price/XAU', {
-            next: { revalidate: 60 }
-        });
-        if (!response.ok) throw new Error('Primary Gold API failed');
-        
-        const data = await response.json();
-        let ounceUSD = data.price;
+        // Fetch from two sources and average them for higher accuracy
+        // Source 1: gold-api.com
+        const goldApiPromise = fetch('https://api.gold-api.com/price/XAU', { next: { revalidate: 60 } })
+            .then(res => res.ok ? res.json() : null)
+            .catch(() => null);
+
+        // Source 2: Binance (PAXG)
+        const binancePromise = fetch('https://api.binance.com/api/v3/ticker/price?symbol=PAXGUSDT', { next: { revalidate: 60 } })
+            .then(res => res.ok ? res.json() : null)
+            .catch(() => null);
+
+        const [goldApiData, binanceData] = await Promise.all([goldApiPromise, binancePromise]);
+
+        let ounceUSD = 0;
+        const pricesToAverage = [];
+
+        if (goldApiData && goldApiData.price) pricesToAverage.push(Number(goldApiData.price));
+        if (binanceData && binanceData.price) pricesToAverage.push(Number(binanceData.price));
+
+        if (pricesToAverage.length > 0) {
+            ounceUSD = pricesToAverage.reduce((a, b) => a + b, 0) / pricesToAverage.length;
+        } else {
+            throw new Error('All gold price sources failed');
+        }
         
         // Fetch dynamic Gold Dollar rate from backend
         let usdToEgp = Number(process.env.NEXT_PUBLIC_USD_EGP_RATE) || 50.5;
         try {
-            const settingRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/settings/usd-egp-rate`);
+            const settingRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/settings/usd-egp-rate`, { cache: 'no-store' });
             if (settingRes.ok) {
                 const settingData = await settingRes.json();
                 if (settingData.value) {
@@ -70,13 +86,7 @@ export async function fetchGoldPrices(): Promise<GoldPrices> {
                 }
             }
         } catch (e) {
-            console.error('Failed to fetch dynamic USD/EGP rate, using default:', e);
-        }
-
-        // Step 2: Calculate prices
-        // Note: gold-api.com sometimes returns EGP per gram directly in some regions
-        if (ounceUSD > 10000) { // It's clearly already in EGP per ounce or similar
-             // ... handling logic below
+            console.error('Failed to fetch dynamic USD/EGP rate:', e);
         }
 
         const goldOunceEGP = ounceUSD * usdToEgp;
@@ -102,14 +112,9 @@ export async function fetchGoldPrices(): Promise<GoldPrices> {
         cachedPrices = prices;
         return prices;
     } catch (error) {
-        console.error('Error in primary fetch, trying Binance fallback:', error);
-        try {
-            return await fetchGoldPricesBinance();
-        } catch (binanceError) {
-            console.error('Binance fallback also failed:', binanceError);
-            if (cachedPrices) return cachedPrices;
-            return getDemoPrices();
-        }
+        console.error('Error fetching prices:', error);
+        if (cachedPrices) return cachedPrices;
+        return getDemoPrices();
     }
 }
 
