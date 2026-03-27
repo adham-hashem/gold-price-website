@@ -111,15 +111,15 @@ export default function HomeClient({ initialPrices, latestArticles }: HomeClient
                 <div className="quick-info-item">
                   <div className="quick-info-icon">🏦</div>
                   <div className="quick-info-text">
-                    <h4>سعر الأونصة بالجنيه</h4>
-                    <p>{formatPrice(prices.ounceEGP)} ج.م</p>
+                    <h4>سعر دولار البنك</h4>
+                    <p>{prices.bankRate.toFixed(2)} ج.م</p>
                   </div>
                 </div>
-                <div className="quick-info-item">
+                <div className="quick-info-item" style={{ borderLeft: '3px solid var(--gold-400)' }}>
                   <div className="quick-info-icon">💱</div>
                   <div className="quick-info-text">
-                    <h4>سعر الدولار</h4>
-                    <p>{prices.usdToEgp.toFixed(2)} ج.م</p>
+                    <h4 style={{ color: 'var(--gold-700)' }}>سعر دولار الصاغة</h4>
+                    <p style={{ fontWeight: 800 }}>{prices.usdToEgp.toFixed(2)} ج.م</p>
                   </div>
                 </div>
                 <div className="quick-info-item">

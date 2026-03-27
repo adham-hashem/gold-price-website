@@ -10,7 +10,8 @@ export interface GoldPrices {
     karat14: number;
     ounceUSD: number;
     ounceEGP: number;
-    usdToEgp: number;
+    usdToEgp: number; // This is actually the "Sagha" rate (Bank + Gap)
+    bankRate: number; // This is the raw API/Bank rate
     goldPound: number;
     lastUpdated: Date;
     change24h: number;
@@ -101,6 +102,7 @@ export async function fetchGoldPrices(): Promise<GoldPrices> {
             ounceUSD: Math.round(ounceUSD * 100) / 100,
             ounceEGP: Math.round(goldOunceEGP),
             usdToEgp: Math.round(effectiveUsdToEgp * 100) / 100,
+            bankRate: Math.round(baseRate * 100) / 100,
             goldPound: Math.round(pricePerGram24K * KARAT_PURITY[21] * 8),
             lastUpdated: new Date(),
             change24h: 0,
@@ -151,6 +153,7 @@ async function fetchGoldPricesBinance(): Promise<GoldPrices> {
         ounceUSD: Math.round(ounceUSD * 100) / 100,
         ounceEGP: Math.round(goldOunceEGP),
         usdToEgp,
+        bankRate: usdToEgp, // In this simple fetcher, we treat them as same
         goldPound: Math.round(pricePerGram24K * KARAT_PURITY[21] * 8),
         lastUpdated: new Date(),
         change24h: 0,
@@ -192,6 +195,7 @@ async function fetchGoldPricesFallback(): Promise<GoldPrices> {
             ounceUSD: Math.round(goldOunceEGP / usdToEgp),
             ounceEGP: Math.round(goldOunceEGP),
             usdToEgp,
+            bankRate: usdToEgp,
             goldPound: Math.round(pricePerGram24K * KARAT_PURITY[21] * 8),
             lastUpdated: new Date(),
             change24h: 0,
@@ -212,6 +216,7 @@ async function fetchGoldPricesFallback(): Promise<GoldPrices> {
         ounceUSD: Math.round(ounceUSD * 100) / 100,
         ounceEGP: Math.round(goldOunceEGP),
         usdToEgp,
+        bankRate: usdToEgp,
         goldPound: Math.round(pricePerGram24K * KARAT_PURITY[21] * 8),
         lastUpdated: new Date(),
         change24h: 0,
@@ -230,6 +235,7 @@ function getDemoPrices(): GoldPrices {
         ounceUSD: 3020,
         ounceEGP: 152510,
         usdToEgp: Number(process.env.NEXT_PUBLIC_USD_EGP_RATE) || 50.5,
+        bankRate: 50.5,
         goldPound: 30135,
         lastUpdated: new Date(),
         change24h: 12.5,

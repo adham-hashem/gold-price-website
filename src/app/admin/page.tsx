@@ -18,6 +18,11 @@ export default function AdminPage() {
     const [metaDescription, setMetaDescription] = useState('');
     const [category, setCategory] = useState('أخبار');
     const [showPrices, setShowPrices] = useState(false);
+    const [price24, setPrice24] = useState('');
+    const [price21, setPrice21] = useState('');
+    const [price18, setPrice18] = useState('');
+    const [price14, setPrice14] = useState('');
+    const [priceGoldPound, setPriceGoldPound] = useState('');
     const [success, setSuccess] = useState('');
     const [articlesList, setArticlesList] = useState<any[]>([]);
     const [editingArticleId, setEditingArticleId] = useState<number | null>(null);
@@ -139,7 +144,14 @@ export default function AdminPage() {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({ title, slug, content, metaDescription, category, showPrices })
+                body: JSON.stringify({ 
+                    title, slug, content, metaDescription, category, showPrices,
+                    price24: price24 ? parseFloat(price24) : null,
+                    price21: price21 ? parseFloat(price21) : null,
+                    price18: price18 ? parseFloat(price18) : null,
+                    price14: price14 ? parseFloat(price14) : null,
+                    priceGoldPound: priceGoldPound ? parseFloat(priceGoldPound) : null
+                })
             });
             const data = await res.json();
             if (res.ok) {
@@ -150,6 +162,11 @@ export default function AdminPage() {
                 setMetaDescription('');
                 setCategory('أخبار');
                 setShowPrices(false);
+                setPrice24('');
+                setPrice21('');
+                setPrice18('');
+                setPrice14('');
+                setPriceGoldPound('');
                 setEditingArticleId(null);
                 fetchArticlesList(); 
                 window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
@@ -171,6 +188,11 @@ export default function AdminPage() {
         setMetaDescription(article.metaDescription || '');
         setCategory(article.category || 'أخبار');
         setShowPrices(article.showPrices || false);
+        setPrice24(article.price24?.toString() || '');
+        setPrice21(article.price21?.toString() || '');
+        setPrice18(article.price18?.toString() || '');
+        setPrice14(article.price14?.toString() || '');
+        setPriceGoldPound(article.priceGoldPound?.toString() || '');
         setSuccess('');
         setError('');
         const formElement = document.getElementById('article-form');
@@ -185,6 +207,11 @@ export default function AdminPage() {
         setMetaDescription('');
         setCategory('أخبار');
         setShowPrices(false);
+        setPrice24('');
+        setPrice21('');
+        setPrice18('');
+        setPrice14('');
+        setPriceGoldPound('');
     };
 
     const handleDeleteArticle = async (id: number) => {
@@ -408,17 +435,54 @@ export default function AdminPage() {
                         </div>
                     </div>
 
-                    <div style={{ padding: '15px', background: 'var(--gold-50)', borderRadius: 'var(--radius-md)', border: '1px solid var(--gold-200)', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <input 
-                            type="checkbox" 
-                            id="showPrices"
-                            checked={showPrices}
-                            onChange={(e) => setShowPrices(e.target.checked)}
-                            style={{ width: '20px', height: '20px', cursor: 'pointer' }}
-                        />
-                        <label htmlFor="showPrices" style={{ fontWeight: 700, cursor: 'pointer', color: 'var(--gold-800)' }}>
-                            📊 عرض صندوق أسعار الذهب المباشرة داخل هذا المقال (اختياري)
-                        </label>
+                    <div style={{ padding: '20px', background: 'var(--gold-50)', borderRadius: 'var(--radius-md)', border: '1px solid var(--gold-200)', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <input 
+                                type="checkbox" 
+                                id="showPrices"
+                                checked={showPrices}
+                                onChange={(e) => setShowPrices(e.target.checked)}
+                                style={{ width: '20px', height: '20px', cursor: 'pointer' }}
+                            />
+                            <label htmlFor="showPrices" style={{ fontWeight: 700, cursor: 'pointer', color: 'var(--gold-800)' }}>
+                                📊 تفعيل صندوق الأسعار داخل المقال
+                            </label>
+                        </div>
+
+                        <div style={{ 
+                            display: 'grid', 
+                            gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', 
+                            gap: '15px', 
+                            marginTop: '10px',
+                            padding: '15px',
+                            background: 'white',
+                            borderRadius: 'var(--radius-sm)',
+                            border: '1px dashed var(--gold-300)'
+                        }}>
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.85rem', fontWeight: 600 }}>عيار 24 (اختياري)</label>
+                                <input type="number" value={price24} onChange={(e) => setPrice24(e.target.value)} className="input" style={{ width: '100%', padding: '8px' }} placeholder="مثلاً 4300" />
+                            </div>
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.85rem', fontWeight: 600 }}>عيار 21 (اختياري)</label>
+                                <input type="number" value={price21} onChange={(e) => setPrice21(e.target.value)} className="input" style={{ width: '100%', padding: '8px' }} placeholder="مثلاً 3700" />
+                            </div>
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.85rem', fontWeight: 600 }}>عيار 18 (اختياري)</label>
+                                <input type="number" value={price18} onChange={(e) => setPrice18(e.target.value)} className="input" style={{ width: '100%', padding: '8px' }} placeholder="مثلاً 3200" />
+                            </div>
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.85rem', fontWeight: 600 }}>عيار 14 (اختياري)</label>
+                                <input type="number" value={price14} onChange={(e) => setPrice14(e.target.value)} className="input" style={{ width: '100%', padding: '8px' }} placeholder="مثلاً 2500" />
+                            </div>
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.85rem', fontWeight: 600 }}>الجنيه الذهب (اختياري)</label>
+                                <input type="number" value={priceGoldPound} onChange={(e) => setPriceGoldPound(e.target.value)} className="input" style={{ width: '100%', padding: '8px' }} placeholder="مثلاً 30000" />
+                            </div>
+                        </div>
+                        <p style={{ fontSize: '0.8rem', color: 'var(--gold-700)', fontStyle: 'italic' }}>
+                            💡 إذا أدخلت أسعاراً يدوية، ستظهر هي في المقال. إذا تركتها فارغة وفعلت الخيار أعلاه، ستظهر الأسعار المباشرة من الموقع.
+                        </p>
                     </div>
 
                     <div>

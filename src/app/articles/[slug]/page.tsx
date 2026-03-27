@@ -140,7 +140,7 @@ export default async function ArticlePage({ params }: PageProps) {
                 <AdSlot type="banner" id="ad-article-top" />
 
                 <div className="card article-body">
-                    {goldPrices && (
+                    {(goldPrices || article.price21) && (
                         <div className="article-price-box" style={{ 
                             background: 'var(--gold-50)', 
                             border: '1px solid var(--gold-200)', 
@@ -150,28 +150,41 @@ export default async function ArticlePage({ params }: PageProps) {
                             textAlign: 'right'
                         }}>
                             <h3 style={{ color: 'var(--gold-800)', marginBottom: '16px', fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                📊 أسعار الذهب الآن <span style={{ fontSize: '0.8rem', fontWeight: 400, color: 'var(--text-muted)' }}>(تحديث لحظي)</span>
+                                📊 {article.price21 ? 'أسعار الذهب المذكورة' : 'أسعار الذهب الآن'} 
+                                <span style={{ fontSize: '0.8rem', fontWeight: 400, color: 'var(--text-muted)' }}>
+                                    {article.price21 ? '(حسب وقت النشر)' : '(تحديث لحظي)'}
+                                </span>
                             </h3>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px' }}>
                                 <div style={{ background: 'var(--card-bg)', padding: '12px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
                                     <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>عيار 24</span>
-                                    <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-primary)' }}>{formatPrice(goldPrices.karat24)} ج.م</div>
+                                    <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+                                        {formatPrice(article.price24 || goldPrices?.karat24 || 0)} ج.م
+                                    </div>
                                 </div>
                                 <div style={{ background: 'var(--card-bg)', padding: '12px', borderRadius: 'var(--radius-md)', border: '1px solid var(--gold-300)', boxShadow: '0 4px 12px rgba(184, 134, 11, 0.1)' }}>
                                     <span style={{ fontSize: '0.85rem', color: 'var(--gold-700)', fontWeight: 700 }}>عيار 21 (الأكثر طلباً)</span>
-                                    <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--gold-600)' }}>{formatPrice(goldPrices.karat21)} ج.م</div>
+                                    <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--gold-600)' }}>
+                                        {formatPrice(article.price21 || goldPrices?.karat21 || 0)} ج.م
+                                    </div>
                                 </div>
                                 <div style={{ background: 'var(--card-bg)', padding: '12px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
                                     <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>عيار 18</span>
-                                    <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-primary)' }}>{formatPrice(goldPrices.karat18)} ج.م</div>
+                                    <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+                                        {formatPrice(article.price18 || goldPrices?.karat18 || 0)} ج.م
+                                    </div>
                                 </div>
                                 <div style={{ background: 'var(--card-bg)', padding: '12px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
                                     <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>عيار 14</span>
-                                    <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-primary)' }}>{formatPrice(goldPrices.karat14)} ج.م</div>
+                                    <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+                                        {formatPrice(article.price14 || goldPrices?.karat14 || 0)} ج.م
+                                    </div>
                                 </div>
                                 <div style={{ background: 'var(--gold-600)', padding: '12px', borderRadius: 'var(--radius-md)', color: 'white' }}>
                                     <span style={{ fontSize: '0.85rem', opacity: 0.9 }}>الجنيه الذهب</span>
-                                    <div style={{ fontSize: '1.2rem', fontWeight: 800 }}>{formatPrice(goldPrices.goldPound)} ج.م</div>
+                                    <div style={{ fontSize: '1.2rem', fontWeight: 800 }}>
+                                        {formatPrice(article.priceGoldPound || goldPrices?.goldPound || 0)} ج.م
+                                    </div>
                                 </div>
                             </div>
                         </div>

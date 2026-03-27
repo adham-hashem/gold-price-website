@@ -8,6 +8,11 @@ export interface Article {
     publishedAt: string;
     isPublished: boolean;
     showPrices: boolean;
+    price24?: number | null;
+    price21?: number | null;
+    price18?: number | null;
+    price14?: number | null;
+    priceGoldPound?: number | null;
 }
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
