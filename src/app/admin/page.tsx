@@ -17,8 +17,10 @@ export default function AdminPage() {
     const [content, setContent] = useState('');
     const [metaDescription, setMetaDescription] = useState('');
     const [category, setCategory] = useState('أخبار');
+    const [showPrices, setShowPrices] = useState(false);
     const [success, setSuccess] = useState('');
     const [articlesList, setArticlesList] = useState<any[]>([]);
+    const [editingArticleId, setEditingArticleId] = useState<number | null>(null);
     
     // Gold Dollar State
     const [goldDollarRate, setGoldDollarRate] = useState('');
@@ -119,36 +121,70 @@ export default function AdminPage() {
         handleUpdateSetting('ounce-offset', goldOunceOffset);
     };
 
-    const handleCreateArticle = async (e: React.FormEvent) => {
+    const handleSaveArticle = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         setSuccess('');
         setError('');
+        
+        const method = editingArticleId ? 'PUT' : 'POST';
+        const url = editingArticleId 
+            ? `${API_URL}/api/admin/articles/${editingArticleId}`
+            : `${API_URL}/api/admin/articles`;
+
         try {
-            const res = await fetch(`${API_URL}/api/admin/articles`, {
-                method: 'POST',
+            const res = await fetch(url, {
+                method,
                 headers: { 
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({ title, slug, content, metaDescription, category })
+                body: JSON.stringify({ title, slug, content, metaDescription, category, showPrices })
             });
             const data = await res.json();
             if (res.ok) {
-                setSuccess('تم نشر المقال بنجاح!');
+                setSuccess(editingArticleId ? 'تم تحديث المقال بنجاح!' : 'تم نشر المقال بنجاح!');
                 setTitle('');
                 setSlug('');
                 setContent('');
                 setMetaDescription('');
-                fetchArticlesList(); // Refresh list
+                setCategory('أخبار');
+                setShowPrices(false);
+                setEditingArticleId(null);
+                fetchArticlesList(); 
+                window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
             } else {
-                setError(data.error || 'فشل في نشر المقال. تأكد من أن الرابط (slug) غير مكرر.');
+                setError(data.error || 'فشل في حفظ المقال. تأكد من أن الرابط (slug) غير مكرر.');
             }
         } catch (err) {
             setError('حدث خطأ غير متوقع في الاتصال');
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleEdit = (article: any) => {
+        setEditingArticleId(article.id);
+        setTitle(article.title);
+        setSlug(article.slug);
+        setContent(article.content);
+        setMetaDescription(article.metaDescription || '');
+        setCategory(article.category || 'أخبار');
+        setShowPrices(article.showPrices || false);
+        setSuccess('');
+        setError('');
+        const formElement = document.getElementById('article-form');
+        if (formElement) formElement.scrollIntoView({ behavior: 'smooth' });
+    };
+
+    const cancelEdit = () => {
+        setEditingArticleId(null);
+        setTitle('');
+        setSlug('');
+        setContent('');
+        setMetaDescription('');
+        setCategory('أخبار');
+        setShowPrices(false);
     };
 
     const handleDeleteArticle = async (id: number) => {
@@ -299,15 +335,24 @@ export default function AdminPage() {
             {success && <div className="card" style={{ marginBottom: '40px', background: 'rgba(34, 197, 94, 0.1)', color: 'var(--green-500)', textAlign: 'center', border: '1px solid rgba(34, 197, 94, 0.2)' }}>{success}</div>}
             {error && <div className="card" style={{ marginBottom: '40px', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--red-500)', textAlign: 'center', border: '1px solid rgba(239, 68, 68, 0.2)' }}>{error}</div>}
 
-            {/* Article Creation Section */}
-            <div className="tool-header" style={{ textAlign: 'right', marginBottom: '20px' }}>
+            {/* Create/Edit Article Section */}
+            <div id="article-form" className="tool-header" style={{ textAlign: 'right', marginTop: '60px', marginBottom: '20px' }}>
                 <h2 style={{ fontSize: '1.6rem', fontWeight: 800 }}>
-                    ✍️ نشر <span className="gold-text">مقال جديد</span>
+                    ✍️ {editingArticleId ? 'تعديل' : 'نشر'} <span className="gold-text">مقال جديد</span>
                 </h2>
+                <p style={{ color: 'var(--text-muted)' }}>استخدم المحرر لكتابة أخبار الذهب أو تحليلات السوق</p>
+                {editingArticleId && (
+                    <button 
+                        onClick={cancelEdit}
+                        style={{ background: 'var(--card-bg)', border: '1px solid var(--border-subtle)', padding: '6px 15px', borderRadius: '20px', cursor: 'pointer', marginTop: '10px', color: 'var(--red-500)', fontWeight: 600 }}
+                    >
+                        الغاء التعديل ✕
+                    </button>
+                )}
             </div>
 
             <div className="card" style={{ padding: '32px' }}>
-                <form onSubmit={handleCreateArticle} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                <form onSubmit={handleSaveArticle} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
                         <div>
                             <label style={{ display: 'block', marginBottom: '8px', fontWeight: 700 }}>عنوان المقال</label>
@@ -363,6 +408,19 @@ export default function AdminPage() {
                         </div>
                     </div>
 
+                    <div style={{ padding: '15px', background: 'var(--gold-50)', borderRadius: 'var(--radius-md)', border: '1px solid var(--gold-200)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <input 
+                            type="checkbox" 
+                            id="showPrices"
+                            checked={showPrices}
+                            onChange={(e) => setShowPrices(e.target.checked)}
+                            style={{ width: '20px', height: '20px', cursor: 'pointer' }}
+                        />
+                        <label htmlFor="showPrices" style={{ fontWeight: 700, cursor: 'pointer', color: 'var(--gold-800)' }}>
+                            📊 عرض صندوق أسعار الذهب المباشرة داخل هذا المقال (اختياري)
+                        </label>
+                    </div>
+
                     <div>
                         <label style={{ display: 'block', marginBottom: '8px', fontWeight: 700 }}>محتوى المقال (يدعم HTML)</label>
                         <textarea 
@@ -401,7 +459,7 @@ export default function AdminPage() {
                             }} 
                             disabled={loading}
                         >
-                            {loading ? 'جاري النشر...' : 'نشر المقال الآن 🚀'}
+                            {loading ? 'جاري الحفظ...' : editingArticleId ? 'حفظ التغييرات 💾' : 'نشر المقال الآن 🚀'}
                         </button>
                     </div>
                 </form>
@@ -449,22 +507,18 @@ export default function AdminPage() {
                                             {new Date(article.publishedAt).toLocaleDateString('ar-EG')}
                                         </td>
                                         <td style={{ padding: '16px' }}>
-                                            <div style={{ display: 'flex', gap: '10px' }}>
-                                                <a 
-                                                    href={`/articles/${article.slug}`} 
-                                                    target="_blank" 
-                                                    rel="noopener noreferrer"
-                                                    style={{ color: 'var(--gold-600)', textDecoration: 'none', fontSize: '0.9rem', fontWeight: 600 }}
+                                                <button 
+                                                    onClick={() => handleEdit(article)}
+                                                    style={{ background: 'none', border: 'none', color: 'var(--gold-600)', cursor: 'pointer', fontWeight: 600, fontSize: '0.9rem' }}
                                                 >
-                                                    عرض 👁️
-                                                </a>
+                                                    تعديل ✏️
+                                                </button>
                                                 <button 
                                                     onClick={() => handleDeleteArticle(article.id)}
                                                     style={{ background: 'none', border: 'none', color: 'var(--red-500)', cursor: 'pointer', fontWeight: 600, fontSize: '0.9rem' }}
                                                 >
                                                     حذف 🗑️
                                                 </button>
-                                            </div>
                                         </td>
                                     </tr>
                                 ))

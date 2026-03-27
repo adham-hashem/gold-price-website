@@ -11,6 +11,7 @@ export interface GoldPrices {
     ounceUSD: number;
     ounceEGP: number;
     usdToEgp: number;
+    goldPound: number;
     lastUpdated: Date;
     change24h: number;
     changePercent24h: number;
@@ -100,6 +101,7 @@ export async function fetchGoldPrices(): Promise<GoldPrices> {
             ounceUSD: Math.round(ounceUSD * 100) / 100,
             ounceEGP: Math.round(goldOunceEGP),
             usdToEgp: Math.round(effectiveUsdToEgp * 100) / 100,
+            goldPound: Math.round(pricePerGram24K * KARAT_PURITY[21] * 8),
             lastUpdated: new Date(),
             change24h: 0,
             changePercent24h: 0,
@@ -149,6 +151,7 @@ async function fetchGoldPricesBinance(): Promise<GoldPrices> {
         ounceUSD: Math.round(ounceUSD * 100) / 100,
         ounceEGP: Math.round(goldOunceEGP),
         usdToEgp,
+        goldPound: Math.round(pricePerGram24K * KARAT_PURITY[21] * 8),
         lastUpdated: new Date(),
         change24h: 0,
         changePercent24h: 0,
@@ -189,6 +192,7 @@ async function fetchGoldPricesFallback(): Promise<GoldPrices> {
             ounceUSD: Math.round(goldOunceEGP / usdToEgp),
             ounceEGP: Math.round(goldOunceEGP),
             usdToEgp,
+            goldPound: Math.round(pricePerGram24K * KARAT_PURITY[21] * 8),
             lastUpdated: new Date(),
             change24h: 0,
             changePercent24h: 0,
@@ -208,6 +212,7 @@ async function fetchGoldPricesFallback(): Promise<GoldPrices> {
         ounceUSD: Math.round(ounceUSD * 100) / 100,
         ounceEGP: Math.round(goldOunceEGP),
         usdToEgp,
+        goldPound: Math.round(pricePerGram24K * KARAT_PURITY[21] * 8),
         lastUpdated: new Date(),
         change24h: 0,
         changePercent24h: 0,
@@ -225,6 +230,7 @@ function getDemoPrices(): GoldPrices {
         ounceUSD: 3020,
         ounceEGP: 152510,
         usdToEgp: Number(process.env.NEXT_PUBLIC_USD_EGP_RATE) || 50.5,
+        goldPound: 30135,
         lastUpdated: new Date(),
         change24h: 12.5,
         changePercent24h: 0.42,

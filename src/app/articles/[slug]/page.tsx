@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { fetchArticleBySlug, fetchArticles, formatDate } from "@/lib/articleService";
+import { fetchGoldPrices, formatPrice } from "@/lib/goldService";
 import Link from "next/link";
+import AdSlot from "@/components/AdSlot";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.egyptgold.online";
 
@@ -46,6 +48,9 @@ export default async function ArticlePage({ params }: PageProps) {
     const article = await fetchArticleBySlug(slug);
 
     if (!article) notFound();
+    
+    // Fetch live prices if needed
+    const goldPrices = article.showPrices ? await fetchGoldPrices().catch(() => null) : null;
 
     // Fetch related articles - prioritize same category
     const allArticles = await fetchArticles();
@@ -132,12 +137,53 @@ export default async function ArticlePage({ params }: PageProps) {
                     <h1>{article.title}</h1>
                 </header>
 
+                <AdSlot type="banner" id="ad-article-top" />
+
                 <div className="card article-body">
+                    {goldPrices && (
+                        <div className="article-price-box" style={{ 
+                            background: 'var(--gold-50)', 
+                            border: '1px solid var(--gold-200)', 
+                            borderRadius: 'var(--radius-lg)', 
+                            padding: '24px', 
+                            marginBottom: '24px',
+                            textAlign: 'right'
+                        }}>
+                            <h3 style={{ color: 'var(--gold-800)', marginBottom: '16px', fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                📊 أسعار الذهب الآن <span style={{ fontSize: '0.8rem', fontWeight: 400, color: 'var(--text-muted)' }}>(تحديث لحظي)</span>
+                            </h3>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px' }}>
+                                <div style={{ background: 'var(--card-bg)', padding: '12px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
+                                    <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>عيار 24</span>
+                                    <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-primary)' }}>{formatPrice(goldPrices.karat24)} ج.م</div>
+                                </div>
+                                <div style={{ background: 'var(--card-bg)', padding: '12px', borderRadius: 'var(--radius-md)', border: '1px solid var(--gold-300)', boxShadow: '0 4px 12px rgba(184, 134, 11, 0.1)' }}>
+                                    <span style={{ fontSize: '0.85rem', color: 'var(--gold-700)', fontWeight: 700 }}>عيار 21 (الأكثر طلباً)</span>
+                                    <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--gold-600)' }}>{formatPrice(goldPrices.karat21)} ج.م</div>
+                                </div>
+                                <div style={{ background: 'var(--card-bg)', padding: '12px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
+                                    <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>عيار 18</span>
+                                    <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-primary)' }}>{formatPrice(goldPrices.karat18)} ج.م</div>
+                                </div>
+                                <div style={{ background: 'var(--card-bg)', padding: '12px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
+                                    <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>عيار 14</span>
+                                    <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-primary)' }}>{formatPrice(goldPrices.karat14)} ج.م</div>
+                                </div>
+                                <div style={{ background: 'var(--gold-600)', padding: '12px', borderRadius: 'var(--radius-md)', color: 'white' }}>
+                                    <span style={{ fontSize: '0.85rem', opacity: 0.9 }}>الجنيه الذهب</span>
+                                    <div style={{ fontSize: '1.2rem', fontWeight: 800 }}>{formatPrice(goldPrices.goldPound)} ج.م</div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     <div 
                         className="article-content"
                         dangerouslySetInnerHTML={{ __html: article.content }}
                     />
                 </div>
+
+                <AdSlot type="banner" id="ad-article-bottom" />
 
                 <div className="article-footer card">
                     <h3 style={{ marginBottom: '16px' }}>أعجبك هذا المقال؟ شاركه مع الآخرين:</h3>

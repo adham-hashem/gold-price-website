@@ -131,6 +131,13 @@ export default function HomeClient({ initialPrices, latestArticles }: HomeClient
                     </p>
                   </div>
                 </div>
+                <div className="quick-info-item" style={{ background: 'var(--gold-50)', border: '1px solid var(--gold-200)' }}>
+                  <div className="quick-info-icon">🪙</div>
+                  <div className="quick-info-text">
+                    <h4 style={{ color: 'var(--gold-800)' }}>سعر الجنيه الذهب</h4>
+                    <p style={{ color: 'var(--gold-700)', fontWeight: 800 }}>{formatPrice(prices.goldPound)} ج.م</p>
+                  </div>
+                </div>
               </div>
             )}
 
