@@ -23,6 +23,7 @@ export default function AdminPage() {
     // Gold Dollar State
     const [goldDollarRate, setGoldDollarRate] = useState('');
     const [goldOunceOffset, setGoldOunceOffset] = useState('');
+    const [apiBaseRate, setApiBaseRate] = useState<number | null>(null);
     const [rateLoading, setRateLoading] = useState(false);
 
     const handleLogin = async (e: React.FormEvent) => {
@@ -54,6 +55,13 @@ export default function AdminPage() {
 
     const fetchCurrentRate = async () => {
         try {
+            // Fetch live API rate
+            const fxRes = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+            if (fxRes.ok) {
+                const fxData = await fxRes.json();
+                if (fxData.rates?.EGP) setApiBaseRate(fxData.rates.EGP);
+            }
+
             const res = await fetch(`${API_URL}/api/settings/all`);
             if (res.ok) {
                 const data = await res.json();
@@ -210,13 +218,13 @@ export default function AdminPage() {
                 <div className="card" style={{ borderLeft: '5px solid var(--gold-500)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <div>
-                            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>السعر الأساسي للدولار (البنك)</span>
+                            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>سعر الدولار الآن (API / بنك)</span>
                             <div style={{ fontSize: '2.5rem', fontWeight: 900, color: 'var(--text-primary)', marginTop: '4px' }}>
-                                {goldDollarRate || '---'} <span style={{ fontSize: '1rem' }}>ج.م</span>
+                                {apiBaseRate || '---'} <span style={{ fontSize: '1rem' }}>ج.م</span>
                             </div>
                         </div>
                         <div style={{ width: '50px', height: '50px', background: 'var(--gold-50)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>
-                            🏦
+                            🌍
                         </div>
                     </div>
                 </div>
@@ -238,26 +246,10 @@ export default function AdminPage() {
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px', marginBottom: '40px' }}>
                 <div className="card">
-                    <h3 style={{ fontSize: '1.05rem', marginBottom: '16px' }}>🏦 تحديث السعر الأساسي للدولار</h3>
-                    <form onSubmit={handleUpdateRate} style={{ display: 'flex', gap: '12px' }}>
-                        <input 
-                            type="number" 
-                            step="0.01"
-                            value={goldDollarRate}
-                            onChange={(e) => setGoldDollarRate(e.target.value)}
-                            className="input"
-                            style={{ flex: 1, padding: '12px' }}
-                            placeholder="50.70..."
-                            required
-                        />
-                        <button type="submit" className="logo-icon" style={{ padding: '0 24px', height: '48px', border: 'none', cursor: 'pointer', borderRadius: 'var(--radius-md)' }} disabled={rateLoading}>
-                            تحديث
-                        </button>
-                    </form>
-                </div>
-
-                <div className="card">
                     <h3 style={{ fontSize: '1.05rem', marginBottom: '16px' }}>⚖️ تحديث فجوة / علاوة الصاغة</h3>
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '12px' }}>
+                        هذا المبلغ يضاف تلقائياً فوق سعر البنك (Live API) ليصل لسعر "دولار الصاغة".
+                    </p>
                     <form onSubmit={handleUpdateOffset} style={{ display: 'flex', gap: '12px' }}>
                         <input 
                             type="number" 
@@ -274,13 +266,34 @@ export default function AdminPage() {
                         </button>
                     </form>
                 </div>
+
+                <div className="card">
+                    <h3 style={{ fontSize: '1.05rem', marginBottom: '16px' }}>🛠️ تعديل يدوي (اختياري)</h3>
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '12px' }}>
+                        استخدم هذا لتجاوز سعر الـ API يدوياً إذا لزم الأمر. اتركه فارغاً لاستخدام سعر السوق.
+                    </p>
+                    <form onSubmit={handleUpdateRate} style={{ display: 'flex', gap: '12px' }}>
+                        <input 
+                            type="number" 
+                            step="0.01"
+                            value={goldDollarRate}
+                            onChange={(e) => setGoldDollarRate(e.target.value)}
+                            className="input"
+                            style={{ flex: 1, padding: '12px' }}
+                            placeholder="50.70..."
+                        />
+                        <button type="submit" className="logo-icon" style={{ padding: '0 24px', height: '48px', border: 'none', cursor: 'pointer', borderRadius: 'var(--radius-md)' }} disabled={rateLoading}>
+                            تعديل
+                        </button>
+                    </form>
+                </div>
             </div>
             <div style={{ textAlign: 'center', marginBottom: '40px', padding: '15px', background: 'var(--gold-50)', borderRadius: 'var(--radius-md)', border: '1px dashed var(--gold-200)' }}>
                 <p style={{ fontWeight: 700, color: 'var(--gold-800)' }}>
-                    💵 دولار الصاغة الفعلي: <span style={{ fontSize: '1.4rem' }}>{(parseFloat(goldDollarRate) || 0) + (parseFloat(goldOunceOffset) || 0)}</span> ج.م
+                    💵 دولار الصاغة الفعلي: <span style={{ fontSize: '1.4rem' }}>{(parseFloat(goldDollarRate) || apiBaseRate || 0) + (parseFloat(goldOunceOffset) || 0)}</span> ج.م
                 </p>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-                    (السعر الأساسي + الفجوة)
+                    ({goldDollarRate ? 'تعديل يدوي' : 'سعر API'} + الفجوة)
                 </p>
             </div>
             {success && <div className="card" style={{ marginBottom: '40px', background: 'rgba(34, 197, 94, 0.1)', color: 'var(--green-500)', textAlign: 'center', border: '1px solid rgba(34, 197, 94, 0.2)' }}>{success}</div>}

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { fetchArticles } from "@/lib/articleService";
 import ArticleCard from "@/components/ArticleCard";
+import Link from "next/link";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.egyptgold.online";
 
@@ -69,7 +70,7 @@ export default async function ArticlesPage({
             {/* Category Tabs */}
             <div style={{ display: 'flex', gap: '10px', marginBottom: '30px', overflowX: 'auto', paddingBottom: '10px' }}>
                 {categories.map((cat) => (
-                    <a
+                    <Link
                         key={cat}
                         href={cat === 'الكل' ? '/articles/' : `/articles/?category=${cat}`}
                         style={{
@@ -87,7 +88,7 @@ export default async function ArticlesPage({
                         }}
                     >
                         {cat === 'الكل' ? 'جميع المقالات' : cat === 'أخبار' ? 'أخبار الذهب' : cat === 'تحليلات' ? 'تحليلات السوق' : 'نصائح الادخار'}
-                    </a>
+                    </Link>
                 ))}
             </div>
 

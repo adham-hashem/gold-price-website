@@ -50,10 +50,11 @@ let cachedPrices: GoldPrices | null = null;
 
 export async function fetchGoldPrices(): Promise<GoldPrices> {
     try {
-        // Fetch from two sources and average them for higher accuracy
-        const [goldApiData, binanceData, settingsData] = await Promise.all([
+        // Fetch from sources: Gold, Binance, Exchange Rate, and Admin Settings
+        const [goldApiData, binanceData, fxData, settingsData] = await Promise.all([
             fetch('https://api.gold-api.com/price/XAU', { next: { revalidate: 60 } }).then(res => res.ok ? res.json() : null).catch(() => null),
             fetch('https://api.binance.com/api/v3/ticker/price?symbol=PAXGUSDT', { next: { revalidate: 60 } }).then(res => res.ok ? res.json() : null).catch(() => null),
+            fetch('https://api.exchangerate-api.com/v4/latest/USD', { next: { revalidate: 3600 } }).then(res => res.ok ? res.json() : null).catch(() => null),
             fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/settings/all`, { cache: 'no-store' }).then(res => res.ok ? res.json() : []).catch(() => [])
         ]);
 
@@ -69,20 +70,23 @@ export async function fetchGoldPrices(): Promise<GoldPrices> {
             throw new Error('All gold price sources failed');
         }
 
-        // Apply manual adjustments from settings
-        let baseRate = Number(process.env.NEXT_PUBLIC_USD_EGP_RATE) || 50.5;
-        let rateOffset = 0;
+        // 1. Get Base Rate from Exchange Rate API (Live Bank Rate)
+        let baseRate = fxData?.rates?.EGP || Number(process.env.NEXT_PUBLIC_USD_EGP_RATE) || 50.5;
+        
+        // 2. Get Manual Correction (Market Gap) from Admin Settings
+        let marketGap = 0;
 
         if (Array.isArray(settingsData)) {
-            const rateSetting = settingsData.find(s => s.key === 'usd-egp-rate');
-            const offsetSetting = settingsData.find(s => s.key === 'ounce-offset'); // Repurposing this key as rate-offset
+            const offsetSetting = settingsData.find(s => s.key === 'ounce-offset'); // This is our "Gap"
+            if (offsetSetting?.value) marketGap = Number(offsetSetting.value);
             
-            if (rateSetting?.value) baseRate = Number(rateSetting.value);
-            if (offsetSetting?.value) rateOffset = Number(offsetSetting.value);
+            // Allow manual override of base rate if specifically set (optional)
+            const manualBase = settingsData.find(s => s.key === 'usd-egp-rate');
+            if (manualBase?.value) baseRate = Number(manualBase.value);
         }
 
-        // Final Gold Dollar Rate with Premium (e.g., 52.5 + 2.0 = 54.5)
-        const effectiveUsdToEgp = baseRate + rateOffset;
+        // Final Gold Dollar Rate = API Rate + Gap (e.g., 52.5 + 2.0 = 54.5)
+        const effectiveUsdToEgp = baseRate + marketGap;
         
         const goldOunceEGP = ounceUSD * effectiveUsdToEgp;
         const pricePerGram24K = (goldOunceEGP / TROY_OUNCE_GRAMS) * EGYPT_MARKET_MARKUP;
