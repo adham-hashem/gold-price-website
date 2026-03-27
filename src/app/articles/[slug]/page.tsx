@@ -47,10 +47,16 @@ export default async function ArticlePage({ params }: PageProps) {
 
     if (!article) notFound();
 
-    // Fetch related articles
+    // Fetch related articles - prioritize same category
     const allArticles = await fetchArticles();
     const relatedArticles = allArticles
         .filter(a => a.slug !== slug)
+        .sort((a, b) => {
+            // Prefer same category
+            if (a.category === article.category && b.category !== article.category) return -1;
+            if (a.category !== article.category && b.category === article.category) return 1;
+            return 0;
+        })
         .slice(0, 3);
 
     const jsonLd = {
@@ -118,7 +124,9 @@ export default async function ArticlePage({ params }: PageProps) {
             <article className="article-post">
                 <header className="article-header">
                     <div className="article-meta">
-                        <Link href="/articles" className="category-badge">{article.category || 'أخبار'}</Link>
+                        <Link href={`/articles/?category=${article.category || 'أخبار'}`} className="category-badge">
+                            {article.category || 'أخبار'}
+                        </Link>
                         <time dateTime={article.publishedAt}>{formatDate(article.publishedAt)}</time>
                     </div>
                     <h1>{article.title}</h1>

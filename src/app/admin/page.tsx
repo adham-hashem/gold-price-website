@@ -18,6 +18,7 @@ export default function AdminPage() {
     const [metaDescription, setMetaDescription] = useState('');
     const [category, setCategory] = useState('أخبار');
     const [success, setSuccess] = useState('');
+    const [articlesList, setArticlesList] = useState<any[]>([]);
     
     // Gold Dollar State
     const [goldDollarRate, setGoldDollarRate] = useState('');
@@ -40,6 +41,7 @@ export default function AdminPage() {
                 setIsLoggedIn(true);
                 localStorage.setItem('adminToken', data.token);
                 fetchCurrentRate();
+                fetchArticlesList();
             } else {
                 setError(data.error);
             }
@@ -59,6 +61,16 @@ export default function AdminPage() {
                 const offset = data.find((s: any) => s.key === 'ounce-offset');
                 if (rate) setGoldDollarRate(rate.value);
                 if (offset) setGoldOunceOffset(offset.value);
+            }
+        } catch (e) {}
+    };
+
+    const fetchArticlesList = async () => {
+        try {
+            const res = await fetch(`${API_URL}/api/articles`);
+            if (res.ok) {
+                const data = await res.json();
+                setArticlesList(data);
             }
         } catch (e) {}
     };
@@ -100,7 +112,53 @@ export default function AdminPage() {
     };
 
     const handleCreateArticle = async (e: React.FormEvent) => {
-        // ... (no changes to this part)
+        e.preventDefault();
+        setLoading(true);
+        setSuccess('');
+        setError('');
+        try {
+            const res = await fetch(`${API_URL}/api/admin/articles`, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ title, slug, content, metaDescription, category })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setSuccess('تم نشر المقال بنجاح!');
+                setTitle('');
+                setSlug('');
+                setContent('');
+                setMetaDescription('');
+                fetchArticlesList(); // Refresh list
+            } else {
+                setError(data.error || 'فشل في نشر المقال. تأكد من أن الرابط (slug) غير مكرر.');
+            }
+        } catch (err) {
+            setError('حدث خطأ غير متوقع في الاتصال');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleDeleteArticle = async (id: number) => {
+        if (!window.confirm('هل أنت متأكد من حذف هذا المقال؟')) return;
+        
+        try {
+            const res = await fetch(`${API_URL}/api/admin/articles/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                fetchArticlesList();
+            } else {
+                alert('فشل في حذف المقال');
+            }
+        } catch (e) {
+            alert('خطأ في الاتصال');
+        }
     };
 
     useEffect(() => {
@@ -109,6 +167,7 @@ export default function AdminPage() {
             setToken(savedToken);
             setIsLoggedIn(true);
             fetchCurrentRate();
+            fetchArticlesList();
         }
     }, []);
 
@@ -314,7 +373,6 @@ export default function AdminPage() {
 
                     <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '20px', borderTop: '1px solid var(--border-subtle)', paddingTop: '24px' }}>
                         {error && <p style={{ color: 'var(--red-400)', fontWeight: 600 }}>{error}</p>}
-                        {success && <p style={{ color: 'var(--green-500)', fontWeight: 600 }}>{success}</p>}
                         <button 
                             type="submit" 
                             className="logo-icon" 
@@ -334,6 +392,73 @@ export default function AdminPage() {
                         </button>
                     </div>
                 </form>
+            </div>
+
+            {/* Articles List Section */}
+            <div className="tool-header" style={{ textAlign: 'right', marginTop: '60px', marginBottom: '20px' }}>
+                <h2 style={{ fontSize: '1.6rem', fontWeight: 800 }}>
+                    📂 إدارة <span className="gold-text">المقالات المنشورة</span>
+                </h2>
+            </div>
+
+            <div className="card" style={{ padding: '0', overflow: 'hidden' }}>
+                <div style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'right' }}>
+                        <thead>
+                            <tr style={{ background: 'var(--gold-50)', borderBottom: '1px solid var(--border-subtle)' }}>
+                                <th style={{ padding: '16px', fontWeight: 800 }}>العنوان</th>
+                                <th style={{ padding: '16px', fontWeight: 800 }}>التصنيف</th>
+                                <th style={{ padding: '16px', fontWeight: 800 }}>التاريخ</th>
+                                <th style={{ padding: '16px', fontWeight: 800 }}>العمليات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {articlesList.length === 0 ? (
+                                <tr>
+                                    <td colSpan={4} style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>لا توجد مقالات منشورة بعد.</td>
+                                </tr>
+                            ) : (
+                                articlesList.map((article) => (
+                                    <tr key={article.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                                        <td style={{ padding: '16px', fontWeight: 600 }}>{article.title}</td>
+                                        <td style={{ padding: '16px' }}>
+                                            <span style={{ 
+                                                padding: '4px 10px', 
+                                                borderRadius: '20px', 
+                                                fontSize: '0.8rem', 
+                                                background: article.category === 'أخبار' ? 'rgba(59, 130, 246, 0.1)' : article.category === 'تحليلات' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)',
+                                                color: article.category === 'أخبار' ? '#3b82f6' : article.category === 'تحليلات' ? '#10b981' : '#f59e0b'
+                                            }}>
+                                                {article.category}
+                                            </span>
+                                        </td>
+                                        <td style={{ padding: '16px', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+                                            {new Date(article.publishedAt).toLocaleDateString('ar-EG')}
+                                        </td>
+                                        <td style={{ padding: '16px' }}>
+                                            <div style={{ display: 'flex', gap: '10px' }}>
+                                                <a 
+                                                    href={`/articles/${article.slug}`} 
+                                                    target="_blank" 
+                                                    rel="noopener noreferrer"
+                                                    style={{ color: 'var(--gold-600)', textDecoration: 'none', fontSize: '0.9rem', fontWeight: 600 }}
+                                                >
+                                                    عرض 👁️
+                                                </a>
+                                                <button 
+                                                    onClick={() => handleDeleteArticle(article.id)}
+                                                    style={{ background: 'none', border: 'none', color: 'var(--red-500)', cursor: 'pointer', fontWeight: 600, fontSize: '0.9rem' }}
+                                                >
+                                                    حذف 🗑️
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     );
