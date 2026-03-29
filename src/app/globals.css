@@ -803,6 +803,10 @@ img {
   border-radius: var(--radius-full);
 }
 
+.article-content {
+  white-space: pre-line;
+}
+
 .article-content p {
   margin-bottom: 1.6em;
 }
