@@ -243,8 +243,58 @@ export default function AdminPage() {
     }, []);
 
     if (!isLoggedIn) {
-        // ... (no changes to this part)
-        return null; // temporary
+        return (
+            <div className="container page-content" style={{ maxWidth: '500px', marginTop: '100px' }}>
+                <div className="card" style={{ padding: '40px', textAlign: 'center' }}>
+                    <h1 style={{ fontSize: '2rem', fontWeight: 900, marginBottom: '8px' }}>
+                        🔐 لوحة <span className="gold-text">التحكم</span>
+                    </h1>
+                    <p style={{ color: 'var(--text-secondary)', marginBottom: '32px' }}>أدخل كلمة المرور للدخول</p>
+                    
+                    <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        <input
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            className="input"
+                            style={{ width: '100%', padding: '14px', textAlign: 'center', fontSize: '1.1rem' }}
+                            placeholder="كلمة المرور"
+                            required
+                            autoFocus
+                        />
+                        {error && (
+                            <div style={{ 
+                                padding: '12px', 
+                                background: 'rgba(239, 68, 68, 0.1)', 
+                                color: 'var(--red-500)', 
+                                borderRadius: 'var(--radius-md)', 
+                                border: '1px solid rgba(239, 68, 68, 0.2)',
+                                fontWeight: 600 
+                            }}>
+                                {error}
+                            </div>
+                        )}
+                        <button
+                            type="submit"
+                            className="logo-icon"
+                            style={{
+                                width: '100%',
+                                height: '52px',
+                                border: 'none',
+                                cursor: 'pointer',
+                                borderRadius: 'var(--radius-md)',
+                                fontSize: '1.1rem',
+                                fontWeight: 700,
+                                boxShadow: '0 10px 20px rgba(184, 134, 11, 0.2)'
+                            }}
+                            disabled={loading}
+                        >
+                            {loading ? 'جاري التحقق...' : 'دخول 🚀'}
+                        </button>
+                    </form>
+                </div>
+            </div>
+        );
     }
 
     return (
