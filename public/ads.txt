@@ -1,0 +1,1 @@
+# Add your own authorized AdSense publisher record before enabling ads.
